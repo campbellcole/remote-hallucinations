@@ -28,4 +28,3 @@ document.getElementById('inp').addEventListener('change', chosen)
 document.getElementById('submit').onclick = submit
 
 var socket = io();
-socket.emit('testdata', 'damn son')
