@@ -64,3 +64,4 @@ package-lock.json
 private/*
 deepdream/processing/*
 tmp.prototxt
+public/output.mp4

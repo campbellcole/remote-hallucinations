@@ -12,15 +12,16 @@ function ready() {
   document.getElementById('inp').addEventListener('change', chosen)
   document.getElementById('submit').onclick = submit
 
-  var octaves = document.getElementById('oct').value
-  var octScale = document.getElementById('octs').value
-  var iterations = document.getElementById('itr').value
-  var blend = document.getElementById('blend').value
-
   document.getElementById('hit_that_yeet').onclick = function() {
-    socket.emit('dream', octaves, octScale, iterations, blend)
+    var octaves = document.getElementById('oct').value
+    var octScale = document.getElementById('octs').value
+    var iterations = document.getElementById('itr').value
+    var blend = document.getElementById('blend').value
+    var crush = document.getElementById('crush').checked ? "1" : "0"
+    var verbose = document.getElementById('verbose').checked
+    socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose)
   }
-  log('ready.', false)
+  log('initialized.', false)
 }
 
 var file
@@ -43,14 +44,11 @@ function submit() {
 }
 
 socket.on('saved', () => {
-  log('BOP yeah aight, blueface baby. let\'s get dreaming.')
-  log('choose some settings, or just leave them default')
-  log('NOTE: i am not gonna write code that checks for invalid arguments. don\'t mess up.')
-  log('WARNING: changing the values too high will cause memory errors.')
+  log('ready to dream.')
   document.getElementById('hit_that_yeet').disabled = false
 })
 
-socket.on('log', (msg) => log(msg))
+socket.on('log', (msg) => log('SERVER: ' + msg))
 
 socket.on('done', () => {
   document.getElementById('download').disabled = false

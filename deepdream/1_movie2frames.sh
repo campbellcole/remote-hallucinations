@@ -1,5 +1,5 @@
 #!/bin/bash
-if [ $# -ne 4 ]; then
+if [ $# -ne 5 ]; then
     echo "please provide the moviename and directory where to store the frames"
     echo "./1_movie2frames [ffmpeg|avconv|mplayer] [movie.mp4] [directory] [png|jpg]"
     exit 1
@@ -35,17 +35,23 @@ else
 fi
 
 if [ "png" == "$4" ]; then
-    PNGCRUSH=$(which pngcrush)
-    if [ "${PNGCRUSH}" != "" ]; then
-        for f in $(find "$3" -type f); do
-            # using method 115 because on my test material it worked the best
-            # if you really have a lot of time on your hands you could use the
-            # second version commented out
-            echo "PNGCRUSHING: $f"
-            ${PNGCRUSH} -ow -m 115 "$f" >/dev/null 2>&1
-            #${PNGCRUSH} -ow -brute "$f" >/dev/null 2>&1
-        done
+    if [ "1" == "$5" ]; then
+        PNGCRUSH=$(which pngcrush)
+        if [ "${PNGCRUSH}" != "" ]; then
+            echo "crushing images..."
+            echo "this will take a while"
+            for f in $(find "$3" -type f); do
+                # using method 115 because on my test material it worked the best
+                # if you really have a lot of time on your hands you could use the
+                # second version commented out
+                echo "PNGCRUSHING: $f"
+                ${PNGCRUSH} -ow -m 115 "$f" >/dev/null 2>&1
+                #${PNGCRUSH} -ow -brute "$f" >/dev/null 2>&1
+            done
+        else
+            echo "pngcrush not installed, can't crush the images"
+        fi
     else
-        echo "pngcrush not installed, can't crush the images"
+        echo "skipping PNG crushing"
     fi
 fi

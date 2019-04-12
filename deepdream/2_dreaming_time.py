@@ -352,7 +352,7 @@ def main(input, output, image_type, gpu, model_path, model_name, preview, octave
         m, s = divmod(timeleft, 60)
         h, m = divmod(m, 60)
         print 'Estimated Total Time Remaining: ' + str(timeleft) + 's (' + "%d:%02d:%02d" % (h, m, s) + ')'
-        print '***************************************''''
+        print '***************************************'''
 
         PIL.Image.fromarray(np.uint8(frame)).save(saveframe)
         newframe = input + "/%08d.%s" % (frame_i,image_type)
