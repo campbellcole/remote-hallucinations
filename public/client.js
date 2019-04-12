@@ -12,19 +12,22 @@ function ready() {
   document.getElementById('inp').addEventListener('change', chosen)
   document.getElementById('submit').onclick = submit
 
-  document.getElementById('hit_that_yeet').onclick = () => { dream(false) }
-  document.getElementById('redream').onclick = () => { dream(true) }
+  document.getElementById('hit_that_yeet').onclick = () => { dream() }
   log('initialized.', false)
 }
 
-function dream(no_decomp) {
+function dream() {
   var octaves = document.getElementById('oct').value
   var octScale = document.getElementById('octs').value
   var iterations = document.getElementById('itr').value
   var blend = document.getElementById('blend').value
   var crush = document.getElementById('crush').checked ? '1' : '0'
   var verbose = document.getElementById('verbose').checked
-  socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose, no_decomp)
+  var dostep1 = document.getElementById('dostep1C').checked
+  var dostep2 = document.getElementById('dostep2C').checked
+  var dostep3 = document.getElementById('dostep3C').checked
+
+  socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3)
 }
 
 var file
@@ -34,8 +37,9 @@ function chosen(event) {
   file = event.target.files[0]
   var spl = file.name.split('.')
   ext = spl[spl.length-1]
+  ext = ext.toLowerCase()
   if (ext != 'mp4' && ext != 'mov') {
-    log('wrong file type. you gotta use .mp4 holmes.')
+    log(`invalid file type: ${ext}`)
     file = null
   } else {
     document.getElementById('submit').disabled = false

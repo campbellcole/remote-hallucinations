@@ -8,7 +8,17 @@ var { spawn } = require('child_process')
 
 app.use(express.static('public'))
 
-fs.unlink('private/processing.lock', (err) => { if (err) throw err })
+const dd = `${__dirname}/deepdream`
+const priv = `${__dirname}/private`
+
+const disasm = `${dd}/disasm.sh`
+const dreampy = `${dd}/dream.py`
+const reasm = `${dd}/reasm.sh`
+
+const disasmOut = `${dd}/processing/out`
+const dreamOut = `${dd}/processing/proc`
+
+fs.unlink('private/processing.lock', (err) => {})
 
 function isTraining(callback) {
   fs.exists('private/processing.lock', (exists) => callback(exists))
@@ -18,23 +28,23 @@ var extension
 
 io.on('connection', (socket) => {
   socket.on('upload data', (dat, ext) => {
-    extension = ext
     socket.emit('log', 'uploading...')
     isTraining((training) => {
       if (!training) {
         fs.writeFile(`private/vid.${ext}`, dat, (err) => {
           if (err) throw err
           socket.emit('log', 'saved')
+          extension = ext
           socket.emit('saved')
         })
       } else {
-        socket.emit('log', 'already training. not gonna save the file.')
+        socket.emit('log', 'can\' upload while training.')
       }
     })
   })
-  socket.on('dream', (octaves, octScale, iterations, blend, crush, verbose, no_decomp) => {
+  socket.on('dream', (octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3) => {
     isTraining((training) => {
-      if (training) socket.emit('log', 'already training. this button is useless now.')
+      if (training) socket.emit('log', 'already training.')
       else {
         fs.writeFile('private/processing.lock', 0xDEADBEEFDEADBEEF, (err) => {
           if (err) throw err
@@ -46,15 +56,17 @@ io.on('connection', (socket) => {
             fs.unlinkSync('deepdream/processing/proc/' + file)
           })
           fs.rmdirSync('deepdream/processing/proc')
-          dream(octaves, octScale, iterations, blend, crush, verbose, no_decomp, (out) => {
+          dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, (out) => {
             socket.emit('log', out)
-          }, () => {
-            fs.rename(__dirname + '/proc_done.mp4', __dirname + '/public/output.mp4', (err) => {
-              if (err) throw err
-              socket.emit('done')
-            })
-            fs.unlink('private/processing.lock', (err) => { if (err) throw err })
-            fs.unlink('private/vid.mov', (err) => { if (err) throw err })
+          }, (succ) => {
+            if (succ) {
+              fs.rename(__dirname + '/proc_done.mp4', __dirname + '/public/output.mp4', (err) => {
+                if (err) socket.emit('log', `${err}`)
+                else socket.emit('done')
+              })
+              fs.unlink('private/processing.lock', (err) => {})
+              fs.unlink(`private/vid.${extension}`, (err) => {})
+            }
           })
         })
       }
@@ -69,64 +81,143 @@ http.listen(3000, () => {
 
 /* DREAMING */
 
-function dream(octaves, octScale, iterations, blend, crush, verbose, no_decomp, log, callback) {
+function dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, log, callback) { // don't get mad at me for repeating code pls
   log('starting dream process. (ALL CREDITS TO GRAPHIFIC)')
-  log('disassembling...')
-  var part1
-  if (no_decomp) {
-    part1 = spawn('echo')
-  } else {
-    part1 = spawn('bash', [__dirname + '/deepdream/1_movie2frames.sh', 'ffmpeg', __dirname + '/private/vid.' + extension, __dirname + '/deepdream/processing/out', 'png', crush])
-  }
-  if (verbose) {
-    part1.stdout.on('data', (dat) => log(''+dat))
-    part1.stderr.on('data', (dat) => log('error: ' + dat))
-  }
-  part1.on('close', (code1) => {
-    if (verbose) {
-      log(`disassembly exited with code ${code1}`)
-    }
-    if (code1==0) {
-      log('dreaming...')
-      var part2 = spawn('python', [__dirname + '/deepdream/2_dreaming_time.py', '-i', __dirname + '/deepdream/processing/out', '-o', __dirname + '/deepdream/processing/proc', '-it', 'png', '-oct', octaves, '-itr', iterations, '-octs', octScale, '-b', blend, '--gpu', '0'])
-      if (verbose) {
-        part2.stdout.on('data', (dat) => log(''+dat))
-        part2.stderr.on('data', (dat) => log('error: ' + dat))
-      } else { // for some reason an stdout has to be set up for this to work
-        part2.stdout.on('data', (dat) => {})
-        part2.stderr.on('data', (dat) => {})
-      }
-      part2.on('close', (code2) => {
+  if (dostep1) {
+    log('disassembling...')
+    _disasm(extension, crush, verbose, log, (excode) => {
+      if (excode != 0) {
+        log('failed to disassemble.')
         if (verbose) {
-          log(`dreaming exited with code ${code2}`)
+          log(`exited with error code: ${excode}`)
         }
-        if (code2==0) {
-          log('reassembling...')
-          var part3 = spawn('bash', [__dirname + '/deepdream/3_frames2movie.sh', 'ffmpeg', __dirname + '/deepdream/processing/proc', __dirname + '/private/vid.' + extension, 'png'])
-          if (verbose) {
-            part3.stdout.on('data', (dat) => log(''+dat))
-            part3.stderr.on('data', (dat) => log('error: ' + dat))
-          }
-          part3.on('close', (code3) => {
+        callback(false)
+      }
+      if (dostep2) {
+        log('dreaming...')
+        _dream(octaves, iterations, octScale, blend, verbose, log, (excode1) => {
+          if (excode1 != 0) {
+            log('failed to dream.')
             if (verbose) {
-              log(`reassembly exited with code ${code3}`)
+              log(`exited with error code: ${excode1}`)
             }
-            if (code3==0) {
-              log('process completed successfully!')
-              callback()
-            } else {
-              log('failed to reassemble')
-              callback()
-            }
-          })
-        } else {
-          log('failed to run dream script')
-          callback()
+            callback(false)
+          }
+          if (dostep3) {
+            log('reassembling...')
+            _reasm(extension, verbose, log, (excode2) => {
+              if (excode2 != 0) {
+                log('failed to reassemble.')
+                if (verbose) {
+                  log(`exited with error code: ${excode2}`)
+                }
+                callback(false)
+              }
+              log('done.')
+              callback(true)
+            })
+          }
+        })
+      }
+    })
+  }
+  if (!dostep1 && dostep2) {
+    log('dreaming...')
+    _dream(octaves, iterations, octScale, blend, verbose, log, (excode1) => {
+      if (excode1 != 0) {
+        log('failed to dream.')
+        if (verbose) {
+          log(`exited with error code: ${excode1}`)
         }
-      })
-    } else {
-      log('failed to disassemble video')
-      callback()
-    }
+        callback(false)
+      }
+      if (dostep3) {
+        log('reassembling...')
+        _reasm(extension, verbose, log, (excode2) => {
+          if (excode2 != 0) {
+            log('failed to reassemble.')
+            if (verbose) {
+              log(`exited with error code: ${excode2}`)
+            }
+            callback(false)
+          }
+          log('done.')
+          callback(true)
+        })
+      }
+    })
+  }
+  if (!dostep1 && !dostep2 && dostep3) {
+    log('reassembling...')
+    _reasm(extension, verbose, log, (excode2) => {
+      if (excode2 != 0) {
+        log('failed to reassemble.')
+        if (verbose) {
+          log(`exited with error code: ${excode2}`)
+        }
+        callback(false)
+      }
+      log('done.')
+      callback(true)
+    })
+  }
+}
+
+function _disasm(ext, crush, verbose, log, callback) {
+  if (!verbose) log = (dat) => {}
+  var args = [
+    `${disasm}`,
+    'ffmpeg',
+    `${priv}/vid.${ext}`,
+    `${disasmOut}`,
+    'png',
+    `${crush}`
+  ]
+  var proc = spawn('bash', args)
+  proc.stdout.on('data', (dat) => log(`${dat}`))
+  proc.stderr.on('data', (dat) => log(`error: ${dat}`))
+  proc.on('close', (excode) => {
+    log('completed disassembly.')
+    callback(excode)
+  })
+}
+
+function _dream(octaves, iterations, octScale, blend, verbose, log, callback) {
+  if (!verbose) log = (dat) => {}
+  var args = [
+    `${dreampy}`,
+    '-i', `${disasmOut}`,
+    '-o', `${dreamOut}`,
+    '-it', 'png',
+    '-oct', `${octaves}`,
+    '-itr', `${iterations}`,
+    '-octs', `${octScale}`,
+    '-b', `${blend}`,
+    '--gpu', '0'
+  ]
+  var proc = spawn('python', args)
+  proc.stdout.on('data', (dat) => log(`${dat}`))
+  proc.stderr.on('data', (dat) => log(`error: ${dat}`))
+  proc.on('close', (excode) => {
+    log('completed dreaming.')
+    callback(excode)
+  })
+}
+
+function _reasm(ext, verbose, log, callback) {
+  if (!verbose) log = (dat) => {}
+  var args = [
+    `${reasm}`,
+    'ffmpeg',
+    `${dreamOut}`,
+    `${priv}/vid.${ext}`,
+    'png'
+  ]
+  var proc = spawn('bash', args)
+  proc.stdout.on('data', (dat) => log(`${dat}`))
+  proc.stderr.on('data', (dat) => log(`error: ${dat}`))
+  proc.on('close', (excode) => {
+    log('completed reassembly.')
+    callback(excode)
   })
 }

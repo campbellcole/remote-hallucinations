@@ -18,19 +18,21 @@
   <h1>deepdream interface</h1>
   <input type="file" id="inp" name="files[]" accept="video/*"/>
   <br/>
-  <button id="submit" type="submit" disabled="true">click me homie</button>
+  <button id="submit" type="submit" disabled="true">uhplode</button>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
   <div id="settings">
     Octaves: <input type="number" id="oct" value="4" /><br/>
     Octave Scale: <input type="number" id="octs" value="1.4" /><br/>
     Iterations: <input type="number" id="itr" value="10" /><br/>
-    Blend: <input type="text" id="blend" value="0.5" /> (0.0-1.0, "loop", or "random") <br/>
-    Crush: <input type="checkbox" id="crush"> enable PNG crush (takes a long time) <br />
+    Blend: <input type="text" id="blend" value="0.5" /> (0.5-1.0, "loop", or "random") <br/>
+    Disassemble: <input type="checkbox" id="dostep1C" checked>
+    Dream: <input type="checkbox" id="dostep2C" checked>
+    Reassemble: <input type="checkbox" id="dostep3C" checked> <br />
+    Crush: <input type="checkbox" id="crush" checked> enable PNG crush<br />
     Verbose: <input type="checkbox" id="verbose"> Displays console output
   </div>
-  <button id="redream">REDREAM</button>
-  <button disabled="true" id="hit_that_yeet">DREAM BABY</button>
+  <button disabled="true" id="hit_that_yeet">PROCESS</button>
   <br/>
   <button disabled="true" id="download">DOWNLOAD</button>
   <h3>LOG:</h3>
