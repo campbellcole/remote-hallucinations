@@ -12,16 +12,19 @@ function ready() {
   document.getElementById('inp').addEventListener('change', chosen)
   document.getElementById('submit').onclick = submit
 
-  document.getElementById('hit_that_yeet').onclick = function() {
-    var octaves = document.getElementById('oct').value
-    var octScale = document.getElementById('octs').value
-    var iterations = document.getElementById('itr').value
-    var blend = document.getElementById('blend').value
-    var crush = document.getElementById('crush').checked ? "1" : "0"
-    var verbose = document.getElementById('verbose').checked
-    socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose)
-  }
+  document.getElementById('hit_that_yeet').onclick = () => { dream(false) }
+  document.getElementById('redream').onclick = () => { dream(true) }
   log('initialized.', false)
+}
+
+function dream(no_decomp) {
+  var octaves = document.getElementById('oct').value
+  var octScale = document.getElementById('octs').value
+  var iterations = document.getElementById('itr').value
+  var blend = document.getElementById('blend').value
+  var crush = document.getElementById('crush').checked ? '1' : '0'
+  var verbose = document.getElementById('verbose').checked
+  socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose, no_decomp)
 }
 
 var file
@@ -31,7 +34,7 @@ function chosen(event) {
   file = event.target.files[0]
   var spl = file.name.split('.')
   ext = spl[spl.length-1]
-  if (ext != "mp4" && ext != "mov") {
+  if (ext != 'mp4' && ext != 'mov') {
     log('wrong file type. you gotta use .mp4 holmes.')
     file = null
   } else {
@@ -52,5 +55,5 @@ socket.on('log', (msg) => log('SERVER: ' + msg))
 
 socket.on('done', () => {
   document.getElementById('download').disabled = false
-  document.getElementById('download').onclick = () => { window.location = "output.mp4" }
+  document.getElementById('download').onclick = () => { window.location = 'output.mp4' }
 })

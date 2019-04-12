@@ -8,6 +8,8 @@ var { spawn } = require('child_process')
 
 app.use(express.static('public'))
 
+fs.unlink('private/processing.lock', (err) => { if (err) throw err })
+
 function isTraining(callback) {
   fs.exists('private/processing.lock', (exists) => callback(exists))
 }
@@ -30,7 +32,7 @@ io.on('connection', (socket) => {
       }
     })
   })
-  socket.on('dream', (octaves, octScale, iterations, blend, crush, verbose) => {
+  socket.on('dream', (octaves, octScale, iterations, blend, crush, verbose, no_decomp) => {
     isTraining((training) => {
       if (training) socket.emit('log', 'already training. this button is useless now.')
       else {
@@ -39,13 +41,20 @@ io.on('connection', (socket) => {
           socket.emit('log', 'locked.')
           socket.emit('log', 'let\'s get this bread.')
           training = true
-          dream(octaves, octScale, iterations, blend, crush, verbose, (out) => {
+          socket.emit('log', 'deleting old files...')
+          fs.readdirSync('deepdream/processing/proc').forEach((file, index) => {
+            fs.unlinkSync('deepdream/processing/proc/' + file)
+          })
+          fs.rmdirSync('deepdream/processing/proc')
+          dream(octaves, octScale, iterations, blend, crush, verbose, no_decomp, (out) => {
             socket.emit('log', out)
           }, () => {
-            fs.rename(__dirname + "/proc_done.mp4", __dirname + "/public/output.mp4", (err) => {
+            fs.rename(__dirname + '/proc_done.mp4', __dirname + '/public/output.mp4', (err) => {
               if (err) throw err
               socket.emit('done')
             })
+            fs.unlink('private/processing.lock', (err) => { if (err) throw err })
+            fs.unlink('private/vid.mov', (err) => { if (err) throw err })
           })
         })
       }
@@ -60,10 +69,15 @@ http.listen(3000, () => {
 
 /* DREAMING */
 
-function dream(octaves, octScale, iterations, blend, crush, verbose, log, callback) {
+function dream(octaves, octScale, iterations, blend, crush, verbose, no_decomp, log, callback) {
   log('starting dream process. (ALL CREDITS TO GRAPHIFIC)')
   log('disassembling...')
-  var part1 = spawn('bash', [__dirname + '/deepdream/1_movie2frames.sh', 'ffmpeg', __dirname + '/private/vid.' + extension, __dirname + '/deepdream/processing/out', 'png', crush])
+  var part1
+  if (no_decomp) {
+    part1 = spawn('echo')
+  } else {
+    part1 = spawn('bash', [__dirname + '/deepdream/1_movie2frames.sh', 'ffmpeg', __dirname + '/private/vid.' + extension, __dirname + '/deepdream/processing/out', 'png', crush])
+  }
   if (verbose) {
     part1.stdout.on('data', (dat) => log(''+dat))
     part1.stderr.on('data', (dat) => log('error: ' + dat))
@@ -99,19 +113,20 @@ function dream(octaves, octScale, iterations, blend, crush, verbose, log, callba
             }
             if (code3==0) {
               log('process completed successfully!')
-              fs.unlink('private/processing.lock', (err) => { if (err) throw err })
-              fs.unlink('private/vid.mov', (err) => { if (err) throw err })
               callback()
             } else {
               log('failed to reassemble')
+              callback()
             }
           })
         } else {
           log('failed to run dream script')
+          callback()
         }
       })
     } else {
       log('failed to disassemble video')
+      callback()
     }
   })
 }
