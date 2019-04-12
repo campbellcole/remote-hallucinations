@@ -14,9 +14,11 @@ function ready() {
 
   var octaves = document.getElementById('oct').value
   var octScale = document.getElementById('octs').value
+  var iterations = document.getElementById('itr').value
+  var blend = document.getElementById('blend').value
 
   document.getElementById('hit_that_yeet').onclick = function() {
-    socket.emit('dream')
+    socket.emit('dream', octaves, octScale, iterations, blend)
   }
   log('ready.', false)
 }
@@ -32,7 +34,7 @@ function chosen(event) {
     log('wrong file type. you gotta use .mp4 holmes.')
     file = null
   } else {
-    document.getElementById('submit').hidden = false
+    document.getElementById('submit').disabled = false
   }
 }
 
@@ -45,8 +47,12 @@ socket.on('saved', () => {
   log('choose some settings, or just leave them default')
   log('NOTE: i am not gonna write code that checks for invalid arguments. don\'t mess up.')
   log('WARNING: changing the values too high will cause memory errors.')
-  document.getElementById('hit_that_yeet').hidden = false
-  document.getElementById('settings').hidden = false
+  document.getElementById('hit_that_yeet').disabled = false
 })
 
 socket.on('log', (msg) => log(msg))
+
+socket.on('done', () => {
+  document.getElementById('download').disabled = false
+  document.getElementById('download').onclick = () => { window.location = "output.mp4" }
+})

@@ -51,7 +51,7 @@ else
     "${FFMPEG}" -framerate ${FPS} -i "${INFILES}" -c:v ${CODEC} -vf "fps=${FPS},format=yuv420p" -tune fastdecode -tune zerolatency -profile:v baseline "${TMPVIDEO}" -y
 
     "${FFMPEG}" -i "$3" -strict -2 "${TMPAUDIO}" -y
-    "${FFMPEG}" -i "${TMPAUDIO}" /tmp/music.wav
+    "${FFMPEG}" -i "${TMPAUDIO}" /tmp/music.wav -y
 
     #secs=$(${FFPROBE} -i "${TMPVIDEO}" -show_entries format=duration -v quiet -of csv="p=0")
     #${FFMPEG} -i /tmp/music.wav -ss 0 -t ${secs} /tmp/musicshort.aac

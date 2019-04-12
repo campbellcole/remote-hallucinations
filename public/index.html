@@ -16,19 +16,20 @@
 </head>
 <body>
   <h1>deepdream interface</h1>
-  <input type="file" id="inp" name="files[]" accept=".mp4|.mov"/>
+  <input type="file" id="inp" name="files[]" accept="video/*"/>
   <br/>
-  <button id="submit" type="submit" hidden="true">click me homie</button>
+  <button id="submit" type="submit" disabled="true">click me homie</button>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
-  <div id="settings" hidden="true">
+  <div id="settings">
     Octaves: <input type="number" id="oct" value="4" /><br/>
     Octave Scale: <input type="number" id="octs" value="1.4" /><br/>
     Iterations: <input type="number" id="itr" value="10" /><br/>
     Blend: <input type="text" id="blend" value="0.5" /> (0.0-1.0, "loop", or "random") <br/>
   </div>
-  <button hidden="true" id="hit_that_yeet">DREAM BABY</button>
+  <button disabled="true" id="hit_that_yeet">DREAM BABY</button>
   <br/>
+  <button disabled="true" id="download">DOWNLOAD</button>
   <h3>LOG:</h3>
   <code id="log"></code>
 </body>

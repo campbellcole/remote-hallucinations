@@ -63,3 +63,4 @@ typings/
 package-lock.json
 private/*
 deepdream/processing/*
+tmp.prototxt
