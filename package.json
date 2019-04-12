@@ -1,0 +1,25 @@
+{
+  "name": "remote-hallucinations",
+  "version": "1.0.0",
+  "description": "YEEEEEEEEEEE ACID BABYYYYYYY",
+  "main": "app.js",
+  "dependencies": {
+    "express": "^4.16.4",
+    "socket.io": "^2.2.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/campbellcole/remote-hallucinations.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/campbellcole/remote-hallucinations/issues"
+  },
+  "homepage": "https://github.com/campbellcole/remote-hallucinations#readme"
+}
