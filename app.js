@@ -4,18 +4,23 @@ var http = require('http').Server(app)
 var io = require('socket.io')(http)
 var fs = require('fs')
 
+var { spawn } = require('child_process')
+
 app.use(express.static('public'))
 
 function isTraining(callback) {
-  fs.exists('private/processing.lock', (exists) => callback(exists))
+  fs.exists('private/processing.lock', (exists) => callback(false)) // temp
 }
 
+var extension
+
 io.on('connection', (socket) => {
-  socket.on('upload data', (dat) => {
+  socket.on('upload data', (dat, ext) => {
+    extension = ext
     socket.emit('log', 'received data. processing...')
     isTraining((training) => {
       if (!training) {
-        fs.writeFile('private/vid.mp4', dat, (err) => {
+        fs.writeFile(`private/vid.${ext}`, dat, (err) => {
           if (err) throw err
           socket.emit('log', 'saved')
           socket.emit('saved')
@@ -34,6 +39,9 @@ io.on('connection', (socket) => {
           socket.emit('log', 'locked...')
           socket.emit('log', 'let\'s get this bread.')
           training = true
+          dream((out) => {
+            socket.emit('log', out)
+          })
         })
       }
     })
@@ -44,3 +52,21 @@ io.on('connection', (socket) => {
 http.listen(3000, () => {
   console.log('listening')
 })
+
+/* DREAMING */
+
+function dream(log) {
+  log('starting dream process. (ALL CREDITS TO GRAPHIFIC)')
+  log('disassembling video...')
+  var proc = spawn('bash', [__dirname + '/deepdream/1_movie2frames.sh', 'ffmpeg', __dirname + '/private/vid.' + extension, __dirname + '/deepdream/processing/proc', 'png'])
+  proc.stdout.on('data', (dat) => log(''+dat))
+  proc.stderr.on('data', (dat) => log('error: ' + dat))
+  proc.on('close', (code) => {
+    log(`exited with code ${code}`)
+    if (code==0) {
+
+    } else {
+      log('failed to disassemble video')
+    }
+  })
+}

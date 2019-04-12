@@ -8,7 +8,7 @@
     border: 1px solid black;
     display: block;
     text-align: left;
-    width: 500px;
+    width: 700px;
     height: 500px;
     overflow: scroll;
   }
@@ -16,11 +16,17 @@
 </head>
 <body>
   <h1>deepdream interface</h1>
-  <input type="file" id="inp" name="files[]" accept=".mp4"/>
+  <input type="file" id="inp" name="files[]" accept=".mp4|.mov"/>
   <br/>
   <button id="submit" type="submit" hidden="true">click me homie</button>
   <script src="/socket.io/socket.io.js"></script>
   <script src="/client.js"></script>
+  <div id="settings" hidden="true">
+    Octaves: <input type="number" id="oct" value="4" /><br/>
+    Octave Scale: <input type="number" id="octs" value="1.4" /><br/>
+    Iterations: <input type="number" id="itr" value="10" /><br/>
+    Blend: <input type="text" id="blend" value="0.5" /> (0.0-1.0, "loop", or "random") <br/>
+  </div>
   <button hidden="true" id="hit_that_yeet">DREAM BABY</button>
   <br/>
   <h3>LOG:</h3>

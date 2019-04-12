@@ -12,6 +12,9 @@ function ready() {
   document.getElementById('inp').addEventListener('change', chosen)
   document.getElementById('submit').onclick = submit
 
+  var octaves = document.getElementById('oct').value
+  var octScale = document.getElementById('octs').value
+
   document.getElementById('hit_that_yeet').onclick = function() {
     socket.emit('dream')
   }
@@ -19,10 +22,13 @@ function ready() {
 }
 
 var file
+var ext
 
 function chosen(event) {
   file = event.target.files[0]
-  if (file.name.split('.')[file.name.split('.').length-1] != "mp4") { // don't do this kids...
+  var spl = file.name.split('.')
+  ext = spl[spl.length-1]
+  if (ext != "mp4" && ext != "mov") {
     log('wrong file type. you gotta use .mp4 holmes.')
     file = null
   } else {
@@ -31,12 +37,16 @@ function chosen(event) {
 }
 
 function submit() {
-  socket.emit('upload data', file)
+  socket.emit('upload data', file, ext)
 }
 
 socket.on('saved', () => {
   log('BOP yeah aight, blueface baby. let\'s get dreaming.')
+  log('choose some settings, or just leave them default')
+  log('NOTE: i am not gonna write code that checks for invalid arguments. don\'t mess up.')
+  log('WARNING: changing the values too high will cause memory errors.')
   document.getElementById('hit_that_yeet').hidden = false
+  document.getElementById('settings').hidden = false
 })
 
 socket.on('log', (msg) => log(msg))
