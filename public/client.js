@@ -23,7 +23,7 @@ var file
 function chosen(event) {
   file = event.target.files[0]
   if (file.name.split('.')[file.name.split('.').length-1] != "mp4") { // don't do this kids...
-    alert('wrong file type. you gotta use .mp4 holmes.')
+    log('wrong file type. you gotta use .mp4 holmes.')
     file = null
   } else {
     document.getElementById('submit').hidden = false
