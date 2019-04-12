@@ -15,3 +15,7 @@ frfr
 
 
 AS IM TYPING THIS I GET A FATAL ERROR WITH LITERALLY NO ERROR MESSAGE HOW AM I SUPPOSED TO KNOW HOW TO FIX IT
+
+ok i take it back i was able to build caffe and pycaffe with cuda 10.1
+
+still... really wish building stuff wasn't such a pain
