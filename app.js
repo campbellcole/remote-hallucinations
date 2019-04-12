@@ -1,14 +1,13 @@
-var app = require('express')();
+var express = require('express');
+var app = express();
 var http = require('http').Server(app)
 var io = require('socket.io')(http)
 
-app.get('/', (req, res) => {
-  res.sendFile(__dirname + '/index.html')
-})
+app.use(express.static('public'))
 
 io.on('connection', (socket) => {
   socket.on('testdata', (dat) => {
-    console.log(`received: ${dat}`)
+    console.log(`received data. saving...`)
   })
   console.log('connected')
 })
