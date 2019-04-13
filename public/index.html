@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>damn son where'd you find this</title>
+  <title>depdrem bby</title>
   <style>
   #log {
     background-color: gray;
@@ -19,8 +19,6 @@
   <input type="file" id="inp" name="files[]" accept="video/*"/>
   <br/>
   <button id="submit" type="submit" disabled="true">uhplode</button>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="/client.js"></script>
   <div id="settings">
     Octaves: <input type="number" id="oct" value="4" /><br/>
     Octave Scale: <input type="number" id="octs" value="1.4" /><br/>
@@ -32,10 +30,11 @@
     Crush: <input type="checkbox" id="crush" checked> enable PNG crush<br />
     Verbose: <input type="checkbox" id="verbose"> Displays console output
   </div>
-  <button disabled="true" id="hit_that_yeet">PROCESS</button>
+  <button id="hit_that_yeet">PROCESS</button>
   <br/>
-  <button disabled="true" id="download">DOWNLOAD</button>
-  <h3>LOG:</h3>
+  <button id="download">view last output</button>
   <code id="log"></code>
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/client.js"></script>
 </body>
 </html>

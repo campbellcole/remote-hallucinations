@@ -11,9 +11,10 @@ function log(msg, linebreak = true) {
 function ready() {
   document.getElementById('inp').addEventListener('change', chosen)
   document.getElementById('submit').onclick = submit
-
   document.getElementById('hit_that_yeet').onclick = () => { dream() }
+  document.getElementById('download').onclick = () => { window.open('output.mp4', '_blank') }
   log('initialized.', false)
+  socket.emit('getstate')
 }
 
 function dream() {
@@ -26,6 +27,8 @@ function dream() {
   var dostep1 = document.getElementById('dostep1C').checked
   var dostep2 = document.getElementById('dostep2C').checked
   var dostep3 = document.getElementById('dostep3C').checked
+
+  document.getElementById('hit_that_yeet').disabled = true
 
   socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3)
 }
@@ -50,6 +53,13 @@ function submit() {
   socket.emit('upload data', file, ext)
 }
 
+socket.on('state', (state, canproc) => {
+  log(`server state: ${state}`)
+  if (state == 'processing' || !canproc) {
+    document.getElementById('hit_that_yeet').disabled = true
+  }
+})
+
 socket.on('saved', () => {
   log('ready to dream.')
   document.getElementById('hit_that_yeet').disabled = false
@@ -58,6 +68,5 @@ socket.on('saved', () => {
 socket.on('log', (msg) => log('SERVER: ' + msg))
 
 socket.on('done', () => {
-  document.getElementById('download').disabled = false
-  document.getElementById('download').onclick = () => { window.location = 'output.mp4' }
+  document.getElementById('download').innerHTML = 'view new output'
 })

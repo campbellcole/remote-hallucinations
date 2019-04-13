@@ -10,6 +10,7 @@ app.use(express.static('public'))
 
 const dd = `${__dirname}/deepdream`
 const priv = `${__dirname}/private`
+const pub = `${__dirname}/public`
 
 const disasm = `${dd}/disasm.sh`
 const dreampy = `${dd}/dream.py`
@@ -18,15 +19,23 @@ const reasm = `${dd}/reasm.sh`
 const disasmOut = `${dd}/processing/out`
 const dreamOut = `${dd}/processing/proc`
 
-fs.unlink('private/processing.lock', (err) => {})
+fs.unlink(`${priv}/processing.lock`, (err) => {})
 
 function isTraining(callback) {
-  fs.exists('private/processing.lock', (exists) => callback(exists))
+  fs.exists(`${priv}/processing.lock`, (exists) => callback(exists))
 }
 
 var extension
 
+var state = "idle"
+
 io.on('connection', (socket) => {
+  socket.on('getstate', () => {
+    var exists = false
+    fs.exists(`${disasmOut}/00000001.png`, (exst) => {
+      socket.emit('state', state, exst)
+    })
+  })
   socket.on('upload data', (dat, ext) => {
     socket.emit('log', 'uploading...')
     isTraining((training) => {
@@ -50,12 +59,9 @@ io.on('connection', (socket) => {
           if (err) throw err
           socket.emit('log', 'locked.')
           socket.emit('log', 'let\'s get this bread.')
+          state = "processing."
           training = true
           socket.emit('log', 'deleting old files...')
-          fs.readdirSync('deepdream/processing/proc').forEach((file, index) => {
-            fs.unlinkSync('deepdream/processing/proc/' + file)
-          })
-          fs.rmdirSync('deepdream/processing/proc')
           dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, (out) => {
             socket.emit('log', out)
           }, (succ) => {
@@ -66,6 +72,7 @@ io.on('connection', (socket) => {
               })
               fs.unlink('private/processing.lock', (err) => {})
               fs.unlink(`private/vid.${extension}`, (err) => {})
+              state = "idle"
             }
           })
         })
@@ -173,6 +180,12 @@ function _disasm(ext, crush, verbose, log, callback) {
     'png',
     `${crush}`
   ]
+  try {
+    fs.readdirSync('deepdream/processing/proc').forEach((file, index) => {
+      fs.unlinkSync('deepdream/processing/proc/' + file)
+    })
+    fs.rmdirSync('deepdream/processing/proc')
+  } catch (err) {}
   var proc = spawn('bash', args)
   proc.stdout.on('data', (dat) => log(`${dat}`))
   proc.stderr.on('data', (dat) => log(`error: ${dat}`))
