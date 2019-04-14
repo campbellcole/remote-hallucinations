@@ -29,8 +29,6 @@ function dream() {
   var dostep2 = document.getElementById('dostep2C').checked
   var dostep3 = document.getElementById('dostep3C').checked
 
-  document.getElementById('hit_that_yeet').disabled = true
-
   socket.emit('dream', octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3)
 }
 
@@ -45,6 +43,7 @@ function chosen(event) {
   if (ext != 'mp4' && ext != 'mov') {
     log(`invalid file type: ${ext}`)
     file = null
+    document.getElementById('submit').disabled = true
   } else {
     document.getElementById('submit').disabled = false
   }
@@ -56,18 +55,14 @@ function submit() {
 
 socket.on('state', (state, canproc) => {
   log(`server state: ${state}`)
-  if (state == 'processing' || !canproc) {
-    document.getElementById('hit_that_yeet').disabled = true
-  }
 })
 
 socket.on('saved', () => {
   log('ready to dream.')
-  document.getElementById('hit_that_yeet').disabled = false
 })
 
 socket.on('log', (msg) => log('SERVER: ' + msg))
 
 socket.on('done', () => {
-  document.getElementById('download').innerHTML = 'view new output'
+
 })
