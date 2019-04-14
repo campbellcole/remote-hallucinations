@@ -71,13 +71,15 @@ io.on('connection', (socket) => {
                 else socket.emit('done')
               })
               fs.unlink('private/processing.lock', (err) => {})
-              fs.unlink(`private/vid.${extension}`, (err) => {})
               state = "idle"
             }
           })
         })
       }
     })
+  })
+  socket.on('save', () => {
+    fs.copyFile(`${pub}/output.mp4`, `${__dirname}/saved/${(Math.random() + 1).toString(36).substring(7)}.mp4`, (err) => { if (err) throw err })
   })
   console.log('connected')
 })

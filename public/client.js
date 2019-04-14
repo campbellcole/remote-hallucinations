@@ -13,6 +13,7 @@ function ready() {
   document.getElementById('submit').onclick = submit
   document.getElementById('hit_that_yeet').onclick = () => { dream() }
   document.getElementById('download').onclick = () => { window.open('output.mp4', '_blank') }
+  document.getElementById('save').onclick = () => { socket.emit('save') }
   log('initialized.', false)
   socket.emit('getstate')
 }

@@ -65,3 +65,4 @@ private/*
 deepdream/processing/*
 tmp.prototxt
 public/output.mp4
+saved/*
