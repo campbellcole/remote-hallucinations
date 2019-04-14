@@ -51,11 +51,12 @@ else
     "${FFMPEG}" -framerate ${FPS} -i "${INFILES}" -c:v ${CODEC} -vf "fps=${FPS},format=yuv420p" -tune fastdecode -tune zerolatency -profile:v baseline "${TMPVIDEO}" -y
 
     "${FFMPEG}" -i "$3" -strict -2 "${TMPAUDIO}" -y
-    "${FFMPEG}" -i "${TMPAUDIO}" /tmp/music.wav -y
-
-    #secs=$(${FFPROBE} -i "${TMPVIDEO}" -show_entries format=duration -v quiet -of csv="p=0")
-    #${FFMPEG} -i /tmp/music.wav -ss 0 -t ${secs} /tmp/musicshort.aac
-    "${FFMPEG}" -i "${TMPAUDIO}" -i "${TMPVIDEO}" -strict -2 -c:v copy -movflags faststart -shortest "${OUTFILE}"
+    if [ -f "${TMPAUDIO}" ]; then
+        "${FFMPEG}" -i "${TMPAUDIO}" /tmp/music.wav -y
+        "${FFMPEG}" -i "${TMPAUDIO}" -i "${TMPVIDEO}" -strict -2 -c:v copy -movflags faststart -shortest "${OUTFILE}"
+    else
+        mv "${TMPVIDEO}" "${OUTFILE}"
+    fi
 fi
 
 echo "Removing temp files"
