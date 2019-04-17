@@ -16,6 +16,7 @@ if [ "1" == "$3" ]; then
       echo "PNGCRUSHING: $f"
       ${PNGCRUSH} -ow -m 115 "$f" >/dev/null 2>&1
     done
+  fi
 else
   echo "skipping PNG crushing"
 fi

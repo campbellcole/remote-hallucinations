@@ -127,6 +127,19 @@ function dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, do
             })
           }
         })
+      } else if (dostep3) {
+        log('reassembling...')
+        _reasm(extension, verbose, log, (excode2) => {
+          if (excode2 != 0) {
+            log('failed to reassemble.')
+            if (verbose) {
+              log(`exited with error code: ${excode2}`)
+            }
+            callback(false)
+          }
+          log('done.')
+          callback(true)
+        })
       }
     })
   }
@@ -221,6 +234,7 @@ function _reasm(ext, verbose, log, callback) {
   if (!verbose) log = (dat) => {}
   var args = [
     `${reasm}`,
+    `${dreamOut}`,
     `${priv}/vid.${ext}`
   ]
   var proc = spawn('bash', args)
