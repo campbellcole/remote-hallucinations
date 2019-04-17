@@ -318,8 +318,6 @@ def main(input, output, image_type, gpu, model_path, model_name, preview, octave
         blend_step = 0.1
 
     for i in xrange(frame_i, nrframes):
-        print('Processing frame #{}').format(frame_i)
-
         #Choosing Layer
         if layers == 'customloop': #loop over layers as set in layersloop array
             endparam = layersloop[frame_i % len(layersloop)]
@@ -342,17 +340,8 @@ def main(input, output, image_type, gpu, model_path, model_name, preview, octave
         difference = int(later - now)
         totaltime += difference
         avgtime = (totaltime / i)
-        # Stats (stolen + adapted from Samim: https://github.com/samim23/DeepDreamAnim/blob/master/dreamer.py)
-        # little less verbose, easy on the fake "console"
-        '''print '***************************************'
-        print 'Saving Image As: ' + saveframe
+
         print 'Frame ' + str(i) + ' of ' + str(nrframes-1)
-        print 'Frame Time: ' + str(difference) + 's'
-        timeleft = avgtime * ((nrframes-1) - frame_i)
-        m, s = divmod(timeleft, 60)
-        h, m = divmod(m, 60)
-        print 'Estimated Total Time Remaining: ' + str(timeleft) + 's (' + "%d:%02d:%02d" % (h, m, s) + ')'
-        print '***************************************'''
 
         PIL.Image.fromarray(np.uint8(frame)).save(saveframe)
         newframe = input + "/%08d.%s" % (frame_i,image_type)

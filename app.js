@@ -176,10 +176,8 @@ function _disasm(ext, crush, verbose, log, callback) {
   if (!verbose) log = (dat) => {}
   var args = [
     `${disasm}`,
-    'ffmpeg',
     `${priv}/vid.${ext}`,
     `${disasmOut}`,
-    'png',
     `${crush}`
   ]
   try {
@@ -223,10 +221,7 @@ function _reasm(ext, verbose, log, callback) {
   if (!verbose) log = (dat) => {}
   var args = [
     `${reasm}`,
-    'ffmpeg',
-    `${dreamOut}`,
-    `${priv}/vid.${ext}`,
-    'png'
+    `${priv}/vid.${ext}`
   ]
   var proc = spawn('bash', args)
   proc.stdout.on('data', (dat) => log(`${dat}`))
