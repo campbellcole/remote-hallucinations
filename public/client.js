@@ -53,7 +53,7 @@ function submit() {
   socket.emit('upload data', file, ext)
 }
 
-socket.on('state', (state, canproc) => {
+socket.on('state', (state) => {
   log(`server state: ${state}`)
 })
 

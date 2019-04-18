@@ -31,10 +31,7 @@ var state = "idle"
 
 io.on('connection', (socket) => {
   socket.on('getstate', () => {
-    var exists = false
-    fs.exists(`${disasmOut}/00000001.png`, (exst) => {
-      socket.emit('state', state, exst)
-    })
+    socket.emit('state', state)
   })
   socket.on('upload data', (dat, ext) => {
     socket.emit('log', 'uploading...')
