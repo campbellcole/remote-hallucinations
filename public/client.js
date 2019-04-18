@@ -62,7 +62,3 @@ socket.on('saved', () => {
 })
 
 socket.on('log', (msg) => log('SERVER: ' + msg))
-
-socket.on('done', () => {
-
-})

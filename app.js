@@ -47,7 +47,7 @@ io.on('connection', (socket) => {
           socket.emit('saved')
         })
       } else {
-        socket.emit('log', 'can\' upload while training.')
+        socket.emit('log', 'can\'t upload while training.')
       }
     })
   })
@@ -65,14 +65,9 @@ io.on('connection', (socket) => {
           dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, (out) => {
             socket.emit('log', out)
           }, (succ) => {
-            if (succ) {
-              fs.rename(__dirname + '/proc_done.mp4', __dirname + '/public/output.mp4', (err) => {
-                if (err) socket.emit('log', `${err}`)
-                else socket.emit('done')
-              })
-              fs.unlink('private/processing.lock', (err) => {})
-              state = "idle"
-            }
+            if (!succ) socket.emit('log', 'failed.')
+            fs.unlink('private/processing.lock', (err) => {})
+            state = "idle"
           })
         })
       }
@@ -92,100 +87,29 @@ http.listen(3000, () => {
 
 function dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, log, callback) { // don't get mad at me for repeating code pls
   log('starting dream process. (ALL CREDITS TO GRAPHIFIC)')
-  if (dostep1) {
-    log('disassembling...')
-    _disasm(extension, crush, verbose, log, (excode) => {
-      if (excode != 0) {
-        log('failed to disassemble.')
-        if (verbose) {
-          log(`exited with error code: ${excode}`)
-        }
-        callback(false)
-      }
-      if (dostep2) {
-        log('dreaming...')
-        _dream(octaves, iterations, octScale, blend, verbose, log, (excode1) => {
-          if (excode1 != 0) {
-            log('failed to dream.')
-            if (verbose) {
-              log(`exited with error code: ${excode1}`)
-            }
-            callback(false)
-          }
-          if (dostep3) {
-            log('reassembling...')
-            _reasm(extension, verbose, log, (excode2) => {
-              if (excode2 != 0) {
-                log('failed to reassemble.')
-                if (verbose) {
-                  log(`exited with error code: ${excode2}`)
-                }
-                callback(false)
-              }
-              log('done.')
-              callback(true)
-            })
-          }
-        })
-      } else if (dostep3) {
-        log('reassembling...')
-        _reasm(extension, verbose, log, (excode2) => {
-          if (excode2 != 0) {
-            log('failed to reassemble.')
-            if (verbose) {
-              log(`exited with error code: ${excode2}`)
-            }
-            callback(false)
-          }
-          log('done.')
-          callback(true)
-        })
-      }
-    })
-  }
-  if (!dostep1 && dostep2) {
-    log('dreaming...')
-    _dream(octaves, iterations, octScale, blend, verbose, log, (excode1) => {
-      if (excode1 != 0) {
-        log('failed to dream.')
-        if (verbose) {
-          log(`exited with error code: ${excode1}`)
-        }
-        callback(false)
-      }
-      if (dostep3) {
-        log('reassembling...')
-        _reasm(extension, verbose, log, (excode2) => {
-          if (excode2 != 0) {
-            log('failed to reassemble.')
-            if (verbose) {
-              log(`exited with error code: ${excode2}`)
-            }
-            callback(false)
-          }
-          log('done.')
-          callback(true)
-        })
-      }
-    })
-  }
-  if (!dostep1 && !dostep2 && dostep3) {
-    log('reassembling...')
-    _reasm(extension, verbose, log, (excode2) => {
+  _disasm(extension, crush, verbose, log, (excode1) => {
+    if (excode1 != 0) {
+      callback(false)
+    }
+    _dream(octaves, iterations, octScale, blend, verbose, log, (excode2) => {
       if (excode2 != 0) {
-        log('failed to reassemble.')
-        if (verbose) {
-          log(`exited with error code: ${excode2}`)
-        }
         callback(false)
       }
-      log('done.')
-      callback(true)
-    })
-  }
+      _reasm(extension, verbose, log, (excode3) => {
+        if (excode3 != 0) {
+          callback(false)
+        }
+        callback(true)
+      }, !dostep3)
+    }, !dostep2)
+  }, !dostep1)
 }
 
-function _disasm(ext, crush, verbose, log, callback) {
+function _disasm(ext, crush, verbose, log, callback, skip) {
+  if (skip) {
+    callback(0)
+  }
+  log('disassembling...')
   if (!verbose) log = (dat) => {}
   var args = [
     `${disasm}`,
@@ -208,7 +132,11 @@ function _disasm(ext, crush, verbose, log, callback) {
   })
 }
 
-function _dream(octaves, iterations, octScale, blend, verbose, log, callback) {
+function _dream(octaves, iterations, octScale, blend, verbose, log, callback, skip) {
+  if (skip) {
+    callback(0)
+  }
+  log('dreaming...')
   if (!verbose) log = (dat) => {}
   var args = [
     `${dreampy}`,
@@ -230,7 +158,11 @@ function _dream(octaves, iterations, octScale, blend, verbose, log, callback) {
   })
 }
 
-function _reasm(ext, verbose, log, callback) {
+function _reasm(ext, verbose, log, callback, skip) {
+  if (skip) {
+    callback(0)
+  }
+  log('reassembling...')
   if (!verbose) log = (dat) => {}
   var args = [
     `${reasm}`,
@@ -241,6 +173,9 @@ function _reasm(ext, verbose, log, callback) {
   proc.stdout.on('data', (dat) => log(`${dat}`))
   proc.stderr.on('data', (dat) => log(`error: ${dat}`))
   proc.on('close', (excode) => {
+    fs.rename(__dirname + '/proc_done.mp4', `${pub}/output.mp4'`, (err) => {
+      if (err) socket.emit('log', `${err}`)
+    })
     log('completed reassembly.')
     callback(excode)
   })
