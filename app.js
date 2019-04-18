@@ -21,8 +21,8 @@ const dreamOut = `${dd}/processing/proc`
 
 fs.unlink(`${priv}/processing.lock`, (err) => {})
 
-function isTraining(callback) {
-  fs.exists(`${priv}/processing.lock`, (exists) => callback(exists))
+function isTraining() {
+  return fs.existsSync(`${priv}/processing.lock`)
 }
 
 var extension
@@ -38,41 +38,36 @@ io.on('connection', (socket) => {
   })
   socket.on('upload data', (dat, ext) => {
     socket.emit('log', 'uploading...')
-    isTraining((training) => {
-      if (!training) {
-        fs.writeFile(`private/vid.${ext}`, dat, (err) => {
-          if (err) throw err
-          socket.emit('log', 'saved')
-          extension = ext
-          socket.emit('saved')
-        })
-      } else {
-        socket.emit('log', 'can\'t upload while training.')
-      }
-    })
+    if (isTraining()) {
+      socket.emit('log', 'can\'t upload while training')
+    } else {
+      fs.writeFile(`private/vid.${ext}`, dat, (err) => {
+        if (err) throw err
+        socket.emit('log', 'saved')
+        extension = ext
+        socket.emit('saved')
+      })
+    }
   })
   socket.on('dream', (octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3) => {
-    isTraining((training) => {
-      if (training) socket.emit('log', 'already training.')
-      else {
-        fs.writeFile('private/processing.lock', 0xDEADBEEFDEADBEEF, (err) => {
-          if (err) throw err
-          socket.emit('log', 'locked.')
-          socket.emit('log', 'let\'s get this bread.')
-          state = "processing."
-          training = true
-          socket.emit('log', 'deleting old files...')
-          dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, (out) => {
-            socket.emit('log', out)
-          }, (succ) => {
-            if (!succ) socket.emit('log', 'failed.')
-            else socket.emit('log', 'done.')
-            fs.unlink('private/processing.lock', (err) => {})
-            state = "idle"
-          })
+    if (isTraining()) {
+      socket.emit('log', 'already training.')
+    } else {
+      fs.writeFile('private/processing.lock', 0xDEADBEEFDEADBEEF, (err) => {
+        if (err) throw err
+        socket.emit('log', 'locked.')
+        socket.emit('log', 'let\'s get this bread.')
+        state = "processing."
+        dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, dostep2, dostep3, (out) => {
+          socket.emit('log', out)
+        }, (succ) => {
+          if (!succ) socket.emit('log', 'failed.')
+          else socket.emit('log', 'done.')
+          fs.unlink('private/processing.lock', (err) => {})
+          state = "idle"
         })
-      }
-    })
+      })
+    }
   })
   socket.on('save', () => {
     fs.copyFile(`${pub}/output.mp4`, `${__dirname}/saved/${(Math.random() + 1).toString(36).substring(7)}.mp4`, (err) => { if (err) throw err })
