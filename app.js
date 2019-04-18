@@ -173,8 +173,8 @@ function _reasm(ext, verbose, log, callback, skip) {
   proc.stdout.on('data', (dat) => log(`${dat}`))
   proc.stderr.on('data', (dat) => log(`error: ${dat}`))
   proc.on('close', (excode) => {
-    fs.rename(__dirname + '/proc_done.mp4', `${pub}/output.mp4'`, (err) => {
-      if (err) socket.emit('log', `${err}`)
+    fs.rename(__dirname + '/proc_done.mp4', `${pub}/output.mp4`, (err) => {
+      if (err) log(`error: ${err}`)
     })
     log('completed reassembly.')
     callback(excode)
