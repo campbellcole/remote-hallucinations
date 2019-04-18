@@ -90,16 +90,20 @@ function dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, do
   _disasm(extension, crush, verbose, log, (excode1) => {
     if (excode1 != 0) {
       callback(false)
+      return
     }
     _dream(octaves, iterations, octScale, blend, verbose, log, (excode2) => {
       if (excode2 != 0) {
         callback(false)
+        return
       }
       _reasm(extension, verbose, log, (excode3) => {
         if (excode3 != 0) {
           callback(false)
+          return
         }
         callback(true)
+        return
       }, !dostep3)
     }, !dostep2)
   }, !dostep1)
@@ -108,6 +112,7 @@ function dream(octaves, octScale, iterations, blend, crush, verbose, dostep1, do
 function _disasm(ext, crush, verbose, log, callback, skip) {
   if (skip) {
     callback(0)
+    return
   }
   log('disassembling...')
   if (!verbose) log = (dat) => {}
@@ -135,6 +140,7 @@ function _disasm(ext, crush, verbose, log, callback, skip) {
 function _dream(octaves, iterations, octScale, blend, verbose, log, callback, skip) {
   if (skip) {
     callback(0)
+    return
   }
   log('dreaming...')
   if (!verbose) log = (dat) => {}
@@ -161,6 +167,7 @@ function _dream(octaves, iterations, octScale, blend, verbose, log, callback, sk
 function _reasm(ext, verbose, log, callback, skip) {
   if (skip) {
     callback(0)
+    return
   }
   log('reassembling...')
   if (!verbose) log = (dat) => {}
