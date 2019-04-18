@@ -66,6 +66,7 @@ io.on('connection', (socket) => {
             socket.emit('log', out)
           }, (succ) => {
             if (!succ) socket.emit('log', 'failed.')
+            else socket.emit('log', 'done.')
             fs.unlink('private/processing.lock', (err) => {})
             state = "idle"
           })
